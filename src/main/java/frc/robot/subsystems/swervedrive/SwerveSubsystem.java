@@ -309,39 +309,33 @@ public class SwerveSubsystem extends SubsystemBase
         edu.wpi.first.units.Units.MetersPerSecond.of(0) // Goal end velocity in meters/sec
                                      );
   }
-    public Command driveToAprilTag(int apriltagnumber, double distanceFromAprilTag){
-      Pose2d targetAprilTagPose = aprilTagFieldLayout.getTagPose(apriltagnumber).get().toPose2d();
-      return driveToPose(
-        //targetAprilTagPose.plus(new Transform2d(new Translation2d(2, 0).rotateBy(targetAprilTagPose.getRotation()),new Rotation2d()))
-        new Pose2d().transformBy(
-          targetAprilTagPose.minus(
-            new Pose2d(
-              new Translation2d(distanceFromAprilTag, 0).rotateBy(targetAprilTagPose.getRotation().plus(
-                new Rotation2d(Units.degreesToRadians(-180)))
-              ),
-              new Rotation2d()
-            )
-          )
-        ).plus(new Transform2d(0, 0, new Rotation2d(Units.degreesToRadians(180))))
-      );
+  public Command driveToAprilTag(int apriltagnumber, Translation2d distanceFromAprilTag, double rotationOffset){
+    Pose2d targetAprilTagPose = aprilTagFieldLayout.getTagPose(apriltagnumber).get().toPose2d();
+    return this.driveToPose(
+      targetAprilTagPose.plus(
+        new Transform2d(distanceFromAprilTag,
+          new Rotation2d(Units.degreesToRadians(-rotationOffset))
+        )
+      )
+    );
+  };
+  public Command driveToAprilTag(int apriltagnumber, Translation2d distanceFromAprilTag){
+    return driveToAprilTag(apriltagnumber, distanceFromAprilTag, 180);
+  };
+  public Command driveToAprilTag(int apriltagnumber){
+    return driveToAprilTag(apriltagnumber,new Translation2d(0,swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters()));
+
+  }
+  public Command driveToAprilTag(int apriltagnumber, double rotationOffset){
+    return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),0), rotationOffset);
   };
 
+
   public Command driveToReef(int apriltagnumber, boolean left){
-    Pose2d targetAprilTagPose = aprilTagFieldLayout.getTagPose(apriltagnumber).get().toPose2d();
-    int distanceToSide = 1;
-    return driveToPose(
-      //targetAprilTagPose.plus(new Transform2d(new Translation2d(2, 0).rotateBy(targetAprilTagPose.getRotation()),new Rotation2d()))
-      new Pose2d().transformBy(
-        targetAprilTagPose.minus(
-          new Pose2d(
-            new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(), .5).rotateBy(targetAprilTagPose.getRotation().plus(
-              new Rotation2d(Units.degreesToRadians(-180)))
-            ),
-            new Rotation2d()
-          )
-        )
-      ).plus(new Transform2d(0, 0, new Rotation2d(Units.degreesToRadians(180))))
-    );
+    if(left){
+      return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),-.25));
+    }
+    return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),.25));
   };
 
 

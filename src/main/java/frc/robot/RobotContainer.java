@@ -160,13 +160,6 @@ public class RobotContainer
       driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
       driverXbox.button(2).whileTrue(Commands.runEnd(() -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
                                                      () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
-      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
-      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
-      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
-      driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
-      driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
-      driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
-
     }
     if (DriverStation.isTest())
     {
@@ -178,12 +171,6 @@ public class RobotContainer
       driverXbox.back().whileTrue(drivebase.centerModulesCommand());
       driverXbox.leftBumper().onTrue(Commands.none());
       driverXbox.rightBumper().onTrue(Commands.none());
-      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
-      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
-      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
-      driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
-      driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
-      driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
     } else
     {
       driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
@@ -196,13 +183,13 @@ public class RobotContainer
       driverXbox.back().whileTrue(Commands.none());
       driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
       driverXbox.rightBumper().onTrue(Commands.none());
-      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18).withTimeout(3));
-      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
-      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
-            //driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
-      //driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
-      //driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
     }
+    driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
+    driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
+    driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
+    driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
+    driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
+    driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
 
   }
 
