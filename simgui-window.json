@@ -11,8 +11,8 @@
       "style": "0",
       "userScale": "2",
       "width": "1280",
-      "xpos": "193",
-      "ypos": "106"
+      "xpos": "345",
+      "ypos": "186"
     }
   },
   "Window": {
@@ -23,8 +23,13 @@
     },
     "###/SmartDashboard/Field": {
       "Collapsed": "0",
-      "Pos": "166,24",
-      "Size": "740,373"
+      "Pos": "449,97",
+      "Size": "740,392"
+    },
+    "###/SmartDashboard/VisionSystemSim-Vision/Sim Field": {
+      "Collapsed": "0",
+      "Pos": "688,216",
+      "Size": "400,200"
     },
     "###FMS": {
       "Collapsed": "0",
@@ -34,7 +39,7 @@
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "250,465",
-      "Size": "796,189"
+      "Size": "796,240"
     },
     "###Keyboard 0 Settings": {
       "Collapsed": "0",
@@ -58,13 +63,13 @@
     },
     "###System Joysticks": {
       "Collapsed": "0",
-      "Pos": "205,308",
+      "Pos": "86,266",
       "Size": "192,218"
     },
     "###Timing": {
       "Collapsed": "0",
       "Pos": "5,150",
-      "Size": "135,219"
+      "Size": "135,173"
     },
     "Debug##Default": {
       "Collapsed": "0",
@@ -74,7 +79,7 @@
     "Robot State": {
       "Collapsed": "0",
       "Pos": "7,20",
-      "Size": "92,116"
+      "Size": "99,116"
     }
   }
 }

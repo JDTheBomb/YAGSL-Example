@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,11 +14,14 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.swervedrive.auto.AprilTagPathPlannerAuto;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -34,7 +38,7 @@ public class RobotContainer
   final         CommandXboxController driverXbox = new CommandXboxController(0);
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-                                                                                "swerve/neo"));
+                                                                                "swerve"));
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -89,12 +93,23 @@ public class RobotContainer
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
+  private final SendableChooser<Command> autoChooser = AutoBuilder.buildAutoChooser();
   public RobotContainer()
   {
+
     // Configure the trigger bindings
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+
+
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+    //autoChooser.setDefaultOption("17", drivebase.driveToAprilTag(17));
+    //autoChooser.addOption("18", drivebase.driveToAprilTag(18));
+    //autoChooser.addOption("19", drivebase.driveToAprilTag(19));
+    //autoChooser.addOption("20", drivebase.driveToAprilTag(20));
+    //autoChooser.addOption("21", drivebase.driveToAprilTag(21));
+    //autoChooser.addOption("22", drivebase.driveToAprilTag(22));
   }
 
   /**
@@ -118,7 +133,7 @@ public class RobotContainer
 
     if (RobotBase.isSimulation())
     {
-      drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
+      drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     } else
     {
       drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
@@ -145,6 +160,12 @@ public class RobotContainer
       driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
       driverXbox.button(2).whileTrue(Commands.runEnd(() -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
                                                      () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
+      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
+      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
+      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
+      driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
+      driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
+      driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
 
     }
     if (DriverStation.isTest())
@@ -157,6 +178,12 @@ public class RobotContainer
       driverXbox.back().whileTrue(drivebase.centerModulesCommand());
       driverXbox.leftBumper().onTrue(Commands.none());
       driverXbox.rightBumper().onTrue(Commands.none());
+      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
+      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
+      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
+      driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
+      driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
+      driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
     } else
     {
       driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
@@ -169,6 +196,12 @@ public class RobotContainer
       driverXbox.back().whileTrue(Commands.none());
       driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
       driverXbox.rightBumper().onTrue(Commands.none());
+      driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18).withTimeout(3));
+      driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
+      driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
+            //driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
+      //driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
+      //driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
     }
 
   }
@@ -181,7 +214,8 @@ public class RobotContainer
   public Command getAutonomousCommand()
   {
     // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
+    //return drivebase.getAutonomousCommand("New Auto");
+    return autoChooser.getSelected();
   }
 
   public void setMotorBrake(boolean brake)

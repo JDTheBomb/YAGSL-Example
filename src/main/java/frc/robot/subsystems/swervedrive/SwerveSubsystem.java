@@ -6,9 +6,21 @@ package frc.robot.subsystems.swervedrive;
 
 import static edu.wpi.first.units.Units.Meter;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
+import org.json.simple.parser.ParseException;
+import org.photonvision.targeting.PhotonPipelineResult;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
+import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -17,16 +29,23 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,15 +54,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.subsystems.swervedrive.Vision.Cameras;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-import org.json.simple.parser.ParseException;
-import org.photonvision.targeting.PhotonPipelineResult;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -64,7 +74,7 @@ public class SwerveSubsystem extends SubsystemBase
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean             visionDriveTest     = false;
+  private final boolean             visionDriveTest     = true;
   /**
    * PhotonVision class to keep an accurate odometry.
    */
@@ -75,9 +85,16 @@ public class SwerveSubsystem extends SubsystemBase
    *
    * @param directory Directory of swerve drive config files.
    */
+
+  private final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+  private final NetworkTableInstance networkTable = NetworkTableInstance.getDefault().getTable("SwerveSubsystem").getInstance();
+  private final StructPublisher<Pose2d> publisher = networkTable
+  .getStructTopic("MyPose", Pose2d.struct).publish();
+
   public SwerveSubsystem(File directory)
   {
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
+
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     try
     {
@@ -140,6 +157,7 @@ public class SwerveSubsystem extends SubsystemBase
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
+    publisher.set(getPose());
   }
 
   @Override
@@ -154,13 +172,29 @@ public class SwerveSubsystem extends SubsystemBase
   {
     // Load the RobotConfig from the GUI settings. You should probably
     // store this in your Constants file
-    RobotConfig config;
     try
     {
-      config = RobotConfig.fromGUISettings();
-
       final boolean enableFeedforward = true;
       // Configure AutoBuilder last
+
+            ModuleConfig swerveModuleConfig = new ModuleConfig(
+        Units.inchesToMeters(3/2),
+        5,
+        swerveDrive.swerveDriveConfiguration.physicalCharacteristics.wheelGripCoefficientOfFriction,
+        DCMotor.getNeoVortex(1),
+        5.5,
+        swerveDrive.swerveDriveConfiguration.physicalCharacteristics.driveMotorCurrentLimit,
+        1);
+      
+      RobotConfig config = new RobotConfig(
+          swerveDrive.swerveDriveConfiguration.physicalCharacteristics.robotMassKg,
+          swerveDrive.swerveDriveConfiguration.physicalCharacteristics.steerRotationalInertia,
+          swerveModuleConfig,
+          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[0],
+          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[1],
+          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[2],
+          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[3]
+        );
       AutoBuilder.configure(
           this::getPose,
           // Robot pose supplier
@@ -263,8 +297,9 @@ public class SwerveSubsystem extends SubsystemBase
   public Command driveToPose(Pose2d pose)
   {
 // Create the constraints to use while pathfinding
+    //swerveDrive.getMaximumChassisVelocity(), 4.0
     PathConstraints constraints = new PathConstraints(
-        swerveDrive.getMaximumChassisVelocity(), 4.0,
+        1, .5,
         swerveDrive.getMaximumChassisAngularVelocity(), Units.degreesToRadians(720));
 
 // Since AutoBuilder is configured, we can use it to build pathfinding commands
@@ -274,6 +309,41 @@ public class SwerveSubsystem extends SubsystemBase
         edu.wpi.first.units.Units.MetersPerSecond.of(0) // Goal end velocity in meters/sec
                                      );
   }
+    public Command driveToAprilTag(int apriltagnumber, double distanceFromAprilTag){
+      Pose2d targetAprilTagPose = aprilTagFieldLayout.getTagPose(apriltagnumber).get().toPose2d();
+      return driveToPose(
+        //targetAprilTagPose.plus(new Transform2d(new Translation2d(2, 0).rotateBy(targetAprilTagPose.getRotation()),new Rotation2d()))
+        new Pose2d().transformBy(
+          targetAprilTagPose.minus(
+            new Pose2d(
+              new Translation2d(distanceFromAprilTag, 0).rotateBy(targetAprilTagPose.getRotation().plus(
+                new Rotation2d(Units.degreesToRadians(-180)))
+              ),
+              new Rotation2d()
+            )
+          )
+        ).plus(new Transform2d(0, 0, new Rotation2d(Units.degreesToRadians(180))))
+      );
+  };
+
+  public Command driveToReef(int apriltagnumber, boolean left){
+    Pose2d targetAprilTagPose = aprilTagFieldLayout.getTagPose(apriltagnumber).get().toPose2d();
+    int distanceToSide = 1;
+    return driveToPose(
+      //targetAprilTagPose.plus(new Transform2d(new Translation2d(2, 0).rotateBy(targetAprilTagPose.getRotation()),new Rotation2d()))
+      new Pose2d().transformBy(
+        targetAprilTagPose.minus(
+          new Pose2d(
+            new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(), .5).rotateBy(targetAprilTagPose.getRotation().plus(
+              new Rotation2d(Units.degreesToRadians(-180)))
+            ),
+            new Rotation2d()
+          )
+        )
+      ).plus(new Transform2d(0, 0, new Rotation2d(Units.degreesToRadians(180))))
+    );
+  };
+
 
   /**
    * Drive with {@link SwerveSetpointGenerator} from 254, implemented by PathPlanner.
