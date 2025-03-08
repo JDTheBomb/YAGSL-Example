@@ -21,7 +21,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.swervedrive.auto.AprilTagPathPlannerAuto;
+import frc.robot.commands.AprilTagPathPlannerAuto;
+import frc.robot.subsystems.coralactuator.Elevator;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -39,6 +40,7 @@ public class RobotContainer
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve"));
+  private final Elevator              elevator   = new Elevator();
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -184,12 +186,12 @@ public class RobotContainer
       driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
       driverXbox.rightBumper().onTrue(Commands.none());
     }
-    driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, 18));
-    driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 19));
-    driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 17));
-    driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, 22));
-    driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, 20));
-    driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, 21));
+    driverXbox.povDown().onTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 18, true, 4));
+    driverXbox.povDownLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 19, true, 4));
+    driverXbox.povDownRight().onTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 17, true, 4));
+    driverXbox.povUpRight().onTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 22, true, 4));
+    driverXbox.povUpLeft().onTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 20, true, 4));
+    driverXbox.povUp().toggleOnTrue(new AprilTagPathPlannerAuto(drivebase, elevator, 21, true, 4));
 
   }
 

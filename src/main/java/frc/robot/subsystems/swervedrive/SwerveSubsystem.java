@@ -42,15 +42,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.subsystems.swervedrive.Vision.Cameras;
@@ -94,14 +93,28 @@ public class SwerveSubsystem extends SubsystemBase
   public SwerveSubsystem(File directory)
   {
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
+    boolean blueAlliance = false;
+    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
+
+
+                                                                      Meter.of(4)),
+
+
+                                                    Rotation2d.fromDegrees(0))
+
+
+                                       : new Pose2d(new Translation2d(Meter.of(16),
+
+
+                                                                      Meter.of(4)),
+
+
+                                                    Rotation2d.fromDegrees(180));
 
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     try
     {
-      swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED,
-                                                                  new Pose2d(new Translation2d(Meter.of(1),
-                                                                                               Meter.of(4)),
-                                                                             Rotation2d.fromDegrees(0)));
+      swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED, startingPose);
       // Alternative method if you don't want to supply the conversion factor via JSON files.
       // swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
     } catch (Exception e)
@@ -123,6 +136,12 @@ public class SwerveSubsystem extends SubsystemBase
       swerveDrive.stopOdometryThread();
     }
     setupPathPlanner();
+    RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
+    //swerveDrive.swerveController.addSlewRateLimiters(new SlewRateLimiter(0), new SlewRateLimiter(0), new SlewRateLimiter(0));
+    //swerveDrive.swerveController.xLimiter.reset(0);
+    //swerveDrive.swerveController.yLimiter.reset(0);
+    //swerveDrive.swerveController.
+    //swerveDrive.swerveController.addSlewRateLimiters(null, null, null);
   }
 
   /**
@@ -177,7 +196,7 @@ public class SwerveSubsystem extends SubsystemBase
       final boolean enableFeedforward = true;
       // Configure AutoBuilder last
 
-            ModuleConfig swerveModuleConfig = new ModuleConfig(
+      ModuleConfig swerveModuleConfig = new ModuleConfig(
         Units.inchesToMeters(3/2),
         5,
         swerveDrive.swerveDriveConfiguration.physicalCharacteristics.wheelGripCoefficientOfFriction,
@@ -190,10 +209,7 @@ public class SwerveSubsystem extends SubsystemBase
           swerveDrive.swerveDriveConfiguration.physicalCharacteristics.robotMassKg,
           swerveDrive.swerveDriveConfiguration.physicalCharacteristics.steerRotationalInertia,
           swerveModuleConfig,
-          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[0],
-          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[1],
-          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[2],
-          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters[3]
+          swerveDrive.swerveDriveConfiguration.moduleLocationsMeters
         );
       AutoBuilder.configure(
           this::getPose,
@@ -331,11 +347,11 @@ public class SwerveSubsystem extends SubsystemBase
   };
 
 
-  public Command driveToReef(int apriltagnumber, boolean left){
-    if(left){
-      return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),-.25));
+  public Command driveToReef(int apriltagnumber, boolean right){
+    if(right){
+      return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),.2));
     }
-    return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),.25));
+    return driveToAprilTag(apriltagnumber, new Translation2d(swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),-.2));
   };
 
 

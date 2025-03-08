@@ -5,6 +5,7 @@
 package frc.robot.subsystems.coralactuator;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -12,11 +13,18 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.util.Elastic.ElasticElevator;
-
+import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.CoralActuatorConstants.ElevatorConstants;;
+import frc.robot.Robot;
+import frc.robot.Constants.CoralActuatorConstants.ElevatorConstants;
 
 public class Elevator extends SubsystemBase {
 
@@ -42,8 +50,14 @@ public class Elevator extends SubsystemBase {
 
   private static final SparkMaxConfig leftSparkMaxConfig = new SparkMaxConfig();
   private static final SparkMaxConfig rightSparkMaxConfig = new SparkMaxConfig();
-
+  //private static final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0, 0, 0);
+  //private static final ElevatorFeedforward test = new ElevatorFeedforward(0, 0, 0);
+  //private static final ElevatorFeedforward test1 = new ElevatorFeedforward(0, 0, 0, 0);
   /** Creates a new Elevator. */
+  //private DCMotor gearBox = DCMotor.getNEO(2).withReduction(12);
+  //private LinearSystem<N2,N1,N2> Elevator = LinearSystemId.createElevatorSystem(gearBox, level, level, level);
+  //private SparkMaxSim sparkMaxSim;
+  //private ElevatorSim elevatorSim;
   public Elevator() {
     zeroEncoder();
     leftSparkMaxConfig.follow(rightMotor, true);
@@ -59,6 +73,11 @@ public class Elevator extends SubsystemBase {
       ResetMode.kResetSafeParameters,
       PersistMode.kPersistParameters
     );
+    if(Robot.isSimulation()){
+      //this.sparkMaxSim = new SparkMaxSim(leftMotor, this.gearBox);
+      //elevatorSim = new ElevatorSim(Elevator, gearBox, level, level, getMaxLimitSwitch(), level, null);
+    }
+    leftMotor.set(0);
   }
 
   public int getLevel() {
@@ -101,7 +120,7 @@ public class Elevator extends SubsystemBase {
         voltage = .2;
       }
     }
-    rightMotor.setVoltage(-voltage - ElasticElevator.kGRAVITY_VOLTS.get());
+    rightMotor.setVoltage(-voltage - ElevatorConstants.kGRAVITY_VOLTS);
   }
 
   public void setVoltageNoGravity(double voltage) {

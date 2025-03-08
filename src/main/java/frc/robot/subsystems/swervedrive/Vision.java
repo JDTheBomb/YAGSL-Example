@@ -38,6 +38,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTablesJNI;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
 import swervelib.SwerveDrive;
@@ -150,9 +151,10 @@ public class Vision
         var pose = poseEst.get();
         //System.out.println(pose.estimatedPose.toPose2d());
         swerveDrive.addVisionMeasurement(pose.estimatedPose.toPose2d(),
-                                         pose.timestampSeconds,
-                                         camera.curStdDevs);
+        pose.timestampSeconds,//Timer.getFPGATimestamp(),
+        camera.curStdDevs);
       }
+      //swerveDrive.setVisionMeasurementStdDevs(null);
     }
 
   }
