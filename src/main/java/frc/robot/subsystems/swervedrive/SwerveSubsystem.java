@@ -45,6 +45,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -93,23 +94,16 @@ public class SwerveSubsystem extends SubsystemBase
   public SwerveSubsystem(File directory)
   {
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
-    boolean blueAlliance = false;
-    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
+    Optional<Alliance> ally = DriverStation.getAlliance();
+    Pose2d startingPose = (false) ? new Pose2d(new Translation2d(Meter.of(1),
+                                                                                    Meter.of(4)),
+                                                                  Rotation2d.fromDegrees(0)
+                                                                  )
+                                                      : new Pose2d(new Translation2d(Meter.of(16),
+                                                                                      Meter.of(4)
+                                                                                      ),
+                                                                  Rotation2d.fromDegrees(180));
 
-
-                                                                      Meter.of(4)),
-
-
-                                                    Rotation2d.fromDegrees(0))
-
-
-                                       : new Pose2d(new Translation2d(Meter.of(16),
-
-
-                                                                      Meter.of(4)),
-
-
-                                                    Rotation2d.fromDegrees(180));
 
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     try
